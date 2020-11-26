@@ -43,14 +43,20 @@ func (h *PRCommentHandler) Handle(ctx context.Context, eventType, deliveryID str
 
 	// get all changed files and owners therefor
 	files := b.GetChangedFiles(event.GetNumber())
-
 	var owners []string
 	for _, file := range files {
 		owners = append(owners, b.GetOwners(file)...)
 	}
 
-	b.MentionOwners(unique(owners), event.GetPullRequest().GetNumber())
+	// now remove the author from the slice
+	owners = b.RemoveAuthor(*event.GetPullRequest().GetUser().Login, unique(owners))
 
+	// mention owners
+	if len(owners) > 0 {
+		b.MentionOwners(owners, event.GetPullRequest().GetNumber())
+	}
+
+	// do finish stuff
 	b.Finish()
 
 	return nil

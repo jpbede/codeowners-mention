@@ -35,7 +35,7 @@ func New(ctx context.Context, ghClient *github.Client, repoOwner, repoName strin
 }
 
 func (b *Bot) getRepoURI() string {
-	return b.repoOwner+"/"+b.repoName
+	return b.repoOwner + "/" + b.repoName
 }
 
 func (b *Bot) GetOwners(path string) []string {
@@ -99,6 +99,17 @@ func (b *Bot) MentionOwners(owners []string, prNum int) {
 	if _, _, err := b.ghClient.Issues.CreateComment(b.ctx, b.repoOwner, b.repoName, prNum, &prComment); err != nil {
 		b.logger.Error().Err(err).Msgf("Got error while creating comment for PR #%i on repo %s", prNum, b.getRepoURI())
 	}
+}
+
+// RemoveAuthor removes the given author from the owners
+func (b *Bot) RemoveAuthor(author string, owners []string) []string {
+	var result []string
+	for _, owner := range owners {
+		if owner != author {
+			result = append(result, owner)
+		}
+	}
+	return result
 }
 
 func (b *Bot) Finish() {
