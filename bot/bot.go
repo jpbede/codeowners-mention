@@ -29,7 +29,9 @@ func New(ctx context.Context, ghClient *github.Client, repoOwner, repoName strin
 		cache: &Cache{},
 	}
 
-	bot.cache.Connect()
+	if err := bot.cache.Connect(); err != nil {
+		bot.logger.Error().Err(err).Msg("Error while connecting to redis cache")
+	}
 
 	return bot
 }

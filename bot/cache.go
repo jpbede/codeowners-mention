@@ -11,13 +11,22 @@ type Cache struct {
 	client *redis.Client
 }
 
-func (c *Cache) Connect() {
-	url, _ := url2.Parse(os.Getenv("REDISCLOUD_URL"))
-	pw, _ := url.User.Password()
-	c.client = redis.NewClient(&redis.Options{
-		Addr:     url.Hostname() + ":" + url.Port(),
-		Password: pw,
-	})
+func (c *Cache) Connect() error {
+	url, parseErr := url2.Parse(os.Getenv("REDISCLOUD_URL"))
+	if parseErr != nil {
+		return parseErr
+	}
+
+	opts := &redis.Options{
+		Addr: url.Hostname() + ":" + url.Port(),
+	}
+	if pw, set := url.User.Password(); set {
+		opts.Password = pw
+	}
+
+	c.client = redis.NewClient(opts)
+
+	return nil
 }
 
 func (c *Cache) GetOwnersFileForRepo(repoURI string) (string, error) {
