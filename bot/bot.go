@@ -101,6 +101,16 @@ func (b *Bot) MentionOwners(owners []string, prNum int) {
 	}
 }
 
+func (b *Bot) RequestReview(owners []string, prNum int) {
+	reviewRequest := github.ReviewersRequest{
+		Reviewers: owners,
+	}
+
+	if _, _, err := b.ghClient.PullRequests.RequestReviewers(b.ctx, b.repoOwner, b.repoName, prNum, &reviewRequest); err != nil {
+		b.logger.Error().Err(err).Msgf("Got error while requesting review for PR #%i on repo %s", prNum, b.getRepoURI())
+	}
+}
+
 // RemoveAuthor removes the given author from the owners
 func (b *Bot) RemoveAuthor(author string, owners []string) []string {
 	var result []string

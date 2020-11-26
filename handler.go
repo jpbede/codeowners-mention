@@ -54,6 +54,7 @@ func (h *PRCommentHandler) Handle(ctx context.Context, eventType, deliveryID str
 	// mention owners
 	if len(owners) > 0 {
 		b.MentionOwners(owners, event.GetPullRequest().GetNumber())
+		b.RequestReview(owners, event.GetPullRequest().GetNumber())
 	}
 
 	// do finish stuff
