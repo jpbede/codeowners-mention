@@ -104,8 +104,12 @@ func (b *Bot) MentionOwners(owners []string, prNum int) {
 }
 
 func (b *Bot) RequestReview(owners []string, prNum int) {
+	var stripped []string
+	for _, owner := range owners {
+		stripped = append(stripped, strings.ReplaceAll(owner, "@", ""))
+	}
 	reviewRequest := github.ReviewersRequest{
-		Reviewers: owners,
+		Reviewers: stripped,
 	}
 
 	if _, _, err := b.ghClient.PullRequests.RequestReviewers(b.ctx, b.repoOwner, b.repoName, prNum, reviewRequest); err != nil {
