@@ -5,8 +5,8 @@ import (
 	"github.com/palantir/go-baseapp/baseapp"
 	"github.com/palantir/go-githubapp/githubapp"
 	"github.com/rcrowley/go-metrics"
-	"github.com/rcrowley/go-metrics/stathat"
 	"github.com/rs/zerolog"
+	"github.com/vrischmann/go-metrics-influxdb"
 	"goji.io/pat"
 	"os"
 	"strconv"
@@ -28,8 +28,16 @@ func main() {
 		panic(err)
 	}
 
-	if key := os.Getenv("STATHAT_KEY"); key != "" {
-		go stathat.Stathat(metrics.DefaultRegistry, 5*time.Second, key)
+	if key := os.Getenv("INFLUX_HOST"); key != "" {
+		go influxdb.InfluxDB(metrics.DefaultRegistry,
+			5*time.Second,
+			key,
+			"codeowners-mention",
+			"stats",
+			os.Getenv("INFLUX_USER"),
+			os.Getenv("INFLUX_PASS"),
+			true,
+		)
 	}
 
 	// setup github config from env
