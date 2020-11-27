@@ -4,6 +4,8 @@ import (
 	"github.com/gregjones/httpcache"
 	"github.com/palantir/go-baseapp/baseapp"
 	"github.com/palantir/go-githubapp/githubapp"
+	"github.com/rcrowley/go-metrics"
+	"github.com/rcrowley/go-metrics/stathat"
 	"github.com/rs/zerolog"
 	"goji.io/pat"
 	"os"
@@ -26,6 +28,10 @@ func main() {
 		panic(err)
 	}
 
+	if key := os.Getenv("STATHAT_KEY"); key != "" {
+		go stathat.Stathat(metrics.DefaultRegistry, 5*time.Second, key)
+	}
+
 	// setup github config from env
 	conf := githubapp.Config{}
 	conf.SetValuesFromEnv("")
@@ -37,6 +43,7 @@ func main() {
 		githubapp.WithClientCaching(false, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
 		githubapp.WithClientMiddleware(
 			githubapp.ClientLogging(zerolog.DebugLevel),
+			githubapp.ClientMetrics(metrics.DefaultRegistry),
 		),
 	)
 	if err != nil {
@@ -48,7 +55,9 @@ func main() {
 	}
 
 	dispatcher := githubapp.NewEventDispatcher([]githubapp.EventHandler{prCommentHandler}, conf.App.WebhookSecret, githubapp.WithScheduler(
-		githubapp.AsyncScheduler(),
+		githubapp.AsyncScheduler(
+			githubapp.WithSchedulingMetrics(metrics.DefaultRegistry),
+		),
 	))
 	server.Mux().Handle(pat.Post(githubapp.DefaultWebhookRoute), dispatcher)
 
